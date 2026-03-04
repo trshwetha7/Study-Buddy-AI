@@ -2,7 +2,8 @@
 
 StudyBuddyAI is a fundamentals-first AI education platform designed to make machine learning and modern AI easier to understand without diluting the technical meaning.
 
-The goal is simple: help learners move from memorizing jargon to actually building intuition.
+The goal is simple: help learners move from memorizing jargon to actually building intuition!
+This is still a work in progress and my passion to create solutions that can actually help others will help me drive this thing :)
 
 ## Screenshots
 
