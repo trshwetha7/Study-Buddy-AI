@@ -21,7 +21,12 @@ The goal is simple: help learners move from memorizing jargon to actually buildi
 
 ### Concept Quiz
 
-![StudyBuddyAI concept quiz](assets/screenshots/4.png)
+<table>
+  <tr>
+    <td><img src="assets/screenshots/8.png" alt="Concept Quiz 1" width="100%"></td>
+    <td><img src="assets/screenshots/7.png" alt="Concept Quiz 2" width="100%"></td>
+  </tr>
+</table>
 
 ### AI Tutor In Action
 
