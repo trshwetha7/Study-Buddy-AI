@@ -1,0 +1,141 @@
+# StudyBuddyAI
+
+StudyBuddyAI is a fundamentals-first AI education platform designed to make machine learning and modern AI easier to understand without diluting the technical meaning.
+
+The goal is simple: help learners move from memorizing jargon to actually building intuition.
+
+## Why This Project Exists
+
+A lot of AI learning today starts too far up the stack. People hear terms like transformers, RAG, agents, fine-tuning, and embeddings before they have a strong grasp of regression, classification, model evaluation, generalization, or probability.
+
+StudyBuddyAI is built to close that gap.
+
+It teaches concepts from the ground up using:
+- technical explanations
+- simple analogies
+- real-world mappings
+- formulas
+- short concept checks
+- an AI tutor for follow-up questions
+
+## What Learners Can Explore
+
+The platform covers a broad learning path across machine learning and AI, including:
+
+- AI landscape and learning paradigms
+- MLE, MAP, and probabilistic estimation
+- train, validation, and test splits
+- linear, polynomial, ridge, lasso, and logistic regression
+- bias-variance tradeoff
+- regression and classification loss functions
+- Bayes theorem and Naive Bayes
+- support vector machines
+- parametric vs non-parametric models and kNN
+- decision trees, random forest, bagging, boosting, and XGBoost
+- clustering and PCA
+- reinforcement learning basics
+- feedforward neural networks and backpropagation
+- CNNs, RNNs, LSTMs, and GRUs
+- transformers, BERT, and GPT-style models
+- prompt engineering
+- fine-tuning, LoRA, and QLoRA
+- RAG pipelines
+- agentic AI systems
+- deployment monitoring and model health
+
+## What Makes StudyBuddyAI Different
+
+StudyBuddyAI is not just a concept dictionary.
+
+Its core value is translation across levels of understanding. Each lesson is designed to help a learner move between:
+
+- the formal technical idea
+- a simple analogy
+- a practical use case
+- the math or formula behind it
+
+That makes it useful for:
+
+- students learning machine learning for the first time
+- non-technical learners trying to understand AI clearly
+- engineers who can build with tools but want stronger foundations
+- interview preparation where conceptual clarity matters
+
+## AI Tutor Experience
+
+StudyBuddyAI includes an AI tutor that supports lesson-aware questioning.
+
+Instead of only showing static content, the tutor can help learners:
+
+- ask follow-up questions in natural language
+- request simpler explanations
+- connect intuition back to the formal concept
+- review quiz answers and clarify mistakes
+
+The tutor layer is built around a retrieval-based setup so responses stay grounded in the lesson material rather than drifting into generic explanations.
+
+## LangChain + LLM Layer
+
+The project includes a LangChain-powered tutor workflow connected to an LLM backend.
+
+At a high level, this layer is used to:
+
+- retrieve lesson-relevant context
+- frame the learner’s question in the right educational context
+- generate cleaner, more structured explanations
+- support interactive tutoring beyond static lesson cards
+
+This makes the platform more than a content website. It becomes a guided learning system with an interactive educational assistant.
+
+## Learning Experience
+
+Each lesson is structured to make the concept stick.
+
+Learners move through:
+
+- a technical explanation
+- a simpler analogy
+- a real-world mapping
+- a formula sheet
+- a visual reference
+- a short thought prompt
+- a flashcard-style takeaway
+- a concept quiz pack
+
+The design choice is intentional: the platform tries to teach the same idea in multiple representations so the learner can build intuition, not just recognition.
+
+## Why It Is Useful
+
+StudyBuddyAI is useful because it addresses a real problem in AI education:
+
+people often know the names of concepts before they understand the meaning of the concepts.
+
+This project is built to slow that down in a productive way. It helps learners understand what a model is doing, why a method exists, when it works well, where it breaks, and how older machine learning foundations connect to modern LLM systems.
+
+## Project Structure
+
+This repository contains:
+
+- `index.html` for the main interface
+- `styles.css` for the visual design and layout
+- `script.js` for lesson rendering, quizzes, interactions, and frontend tutor behavior
+- `server.py` for serving the app and tutor API routes
+- `backend/tutor_backend.py` for the tutor engine and LangChain-powered response flow
+- `backend/tutor_knowledge.py` for the lesson knowledge base used for retrieval
+- `requirements.txt` for Python dependencies
+
+## Tech Stack
+
+- HTML
+- CSS
+- JavaScript
+- Python
+- LangChain
+- OpenAI API
+- MathJax
+
+GitHub’s language breakdown is generated automatically from the actual files in the repository, so once you push this repo it will naturally reflect the project mix such as JavaScript, HTML, CSS, and Python.
+
+## Author
+
+Created fully by **Shwetha**.

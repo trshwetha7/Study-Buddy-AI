@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyBuddyAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"]
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"]
+          ]
+        },
+        svg: { fontCache: "global" }
+      };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-doodle" aria-hidden="true"></div>
+
+    <header class="hero shell">
+      <div class="hero-copy card">
+        <p class="eyebrow">Build deep intuition, one idea at a time</p>
+        <h1>StudyBuddyAI</h1>
+        <p>
+          A friendly AI learning space for students, career switchers, and engineers.
+          Each lesson connects technical ideas to simple analogies, real-world examples,
+          and guided practice so the concept actually sticks.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" id="startLearningBtn">Start at the Beginning</button>
+          <button class="btn btn-soft" id="randomLessonBtn">Surprise Me</button>
+        </div>
+      </div>
+
+      <div class="hero-visual card" aria-hidden="true">
+        <svg viewBox="0 0 520 270" class="hero-svg">
+          <rect x="24" y="28" width="472" height="214" rx="26" fill="#fff6e8" stroke="#efdcbc" />
+          <rect x="50" y="58" width="152" height="142" rx="24" fill="#dff2f4" />
+          <ellipse cx="126" cy="188" rx="54" ry="10" fill="#cde8ea" />
+          <circle cx="112" cy="108" r="21" fill="#1e2f46" />
+          <rect x="82" y="136" width="64" height="50" rx="18" fill="#20a7ad" />
+          <rect x="140" y="146" width="34" height="16" rx="8" fill="#1e2f46" opacity="0.16" />
+          <rect x="166" y="140" width="60" height="40" rx="14" fill="#ffffff" stroke="#d7e3ee" />
+          <rect x="180" y="152" width="30" height="5" rx="2.5" fill="#7ccbd1" />
+          <rect x="180" y="164" width="20" height="5" rx="2.5" fill="#f1bc86" />
+          <line x1="166" y1="157" x2="154" y2="166" stroke="#30445c" stroke-width="4" stroke-linecap="round" />
+
+          <rect x="260" y="82" width="182" height="96" rx="20" fill="#ffffff" stroke="#d8e4ef" />
+          <rect x="282" y="102" width="100" height="12" rx="6" fill="#75c8cf" />
+          <rect x="282" y="126" width="134" height="12" rx="6" fill="#f6bf8b" />
+          <rect x="282" y="150" width="112" height="12" rx="6" fill="#75c8cf" />
+
+          <circle cx="446" cy="72" r="15" fill="#fff4cb" stroke="#ffbd75" stroke-width="4" />
+          <rect x="439" y="87" width="14" height="10" rx="4" fill="#ffbd75" />
+          <line x1="446" y1="48" x2="446" y2="34" stroke="#ffbd75" stroke-width="4" stroke-linecap="round" />
+          <line x1="429" y1="55" x2="420" y2="46" stroke="#ffbd75" stroke-width="4" stroke-linecap="round" />
+          <line x1="463" y1="55" x2="472" y2="46" stroke="#ffbd75" stroke-width="4" stroke-linecap="round" />
+          <line x1="422" y1="72" x2="410" y2="72" stroke="#ffbd75" stroke-width="4" stroke-linecap="round" />
+          <line x1="470" y1="72" x2="482" y2="72" stroke="#ffbd75" stroke-width="4" stroke-linecap="round" />
+
+          <text x="258" y="208" fill="#214153" font-size="22" font-family="Baloo 2" font-weight="700">AI made simple</text>
+          <text x="258" y="232" fill="#6a4e36" font-size="16" font-family="Nunito" font-weight="800">Learn with clarity.</text>
+        </svg>
+      </div>
+    </header>
+
+    <section class="shell progress-row">
+      <article class="metric card">
+        <h2 id="completedMetric">0/0</h2>
+        <p>Lessons completed</p>
+      </article>
+      <article class="metric card">
+        <h2 id="accuracyMetric">0%</h2>
+        <p>Quiz accuracy</p>
+      </article>
+      <article class="metric card">
+        <h2 id="streakMetric">0</h2>
+        <p>Current streak</p>
+      </article>
+      <article class="metric card">
+        <h2 id="pointsMetric">0</h2>
+        <p>Total points</p>
+      </article>
+    </section>
+
+    <section class="shell controls card">
+      <div>
+        <h2>Learning Path Tracks</h2>
+        <p id="trackHint" class="muted">Select a track. Lesson list updates immediately.</p>
+      </div>
+      <div id="trackTabs" class="track-tabs"></div>
+      <div class="filters-row">
+        <label>
+          <span>Difficulty</span>
+          <select id="levelSelect"></select>
+        </label>
+        <label>
+          <span>Search concepts</span>
+          <input id="searchInput" type="search" placeholder="Try: MLE, SVM, GRU, LoRA" />
+        </label>
+      </div>
+      <p id="resultsBanner" class="results-banner"></p>
+    </section>
+
+    <main class="shell main-grid">
+      <aside class="lesson-sidebar card">
+        <div class="lesson-list-head">
+          <h2>Concepts</h2>
+          <span id="lessonCountPill" class="pill">0 lessons</span>
+        </div>
+        <div id="lessonList" class="lesson-list"></div>
+      </aside>
+
+      <section class="lesson-panel card">
+        <article id="lessonHeader" class="lesson-header"></article>
+
+        <section class="two-col">
+          <article class="sub-card">
+            <h3>Technical explanation</h3>
+            <p id="technicalText"></p>
+          </article>
+          <article class="sub-card">
+            <h3>Simple analogy</h3>
+            <p id="simpleText"></p>
+          </article>
+        </section>
+
+        <section class="three-col">
+          <article class="sub-card">
+            <h3>Why this matters</h3>
+            <p id="importanceText"></p>
+          </article>
+          <article class="sub-card">
+            <h3>Common pitfall</h3>
+            <p id="pitfallText"></p>
+          </article>
+          <article class="sub-card">
+            <h3>Real-world mapping</h3>
+            <p id="snippetText"></p>
+          </article>
+        </section>
+
+        <section class="sub-card">
+          <h3>Formula sheet</h3>
+          <p id="formulaIntro" class="muted"></p>
+          <div id="formulaPrimary" class="formula-list"></div>
+          <button id="toggleFormulaBtn" class="btn btn-ghost formula-toggle">Show more formulas</button>
+          <div id="formulaExtras" class="formula-list hidden"></div>
+        </section>
+
+        <section id="visualSection" class="visual-box sub-card">
+          <div class="visual-head">
+            <h3>Reference visual</h3>
+            <p id="visualCaption" class="muted"></p>
+          </div>
+          <div id="visualCanvas" class="visual-canvas" aria-hidden="true"></div>
+          <p id="imageCredit" class="image-credit"></p>
+        </section>
+
+        <section class="thought-box sub-card">
+          <div class="thought-top">
+            <h3>Food for thought</h3>
+            <button id="newThoughtBtn" class="btn btn-ghost">New thought prompt</button>
+          </div>
+          <p id="thoughtText"></p>
+        </section>
+
+        <section class="sub-card">
+          <div class="thought-top">
+            <h3>Learning flashcard</h3>
+            <button id="newFlashBtn" class="btn btn-ghost">New flashcard</button>
+          </div>
+          <p id="flashcardText"></p>
+        </section>
+
+        <section class="quiz-box sub-card">
+          <div class="quiz-head">
+            <h3>Concept quiz pack</h3>
+            <span id="quizProgressPill" class="pill">Q 1/2</span>
+          </div>
+          <p id="quizQuestion"></p>
+          <div id="quizChoices" class="quiz-choices"></div>
+          <div class="quiz-actions">
+            <button id="checkAnswerBtn" class="btn btn-primary" disabled>Check answer</button>
+            <button id="nextQuestionBtn" class="btn btn-soft" disabled>Next question</button>
+            <button id="newQuizPackBtn" class="btn btn-soft">New dynamic quiz pack</button>
+            <button id="markCompleteBtn" class="btn btn-ghost">Mark lesson complete</button>
+          </div>
+          <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="sub-card">
+          <div class="thought-top">
+            <h3>Ask the AI tutor</h3>
+            <span id="tutorModePill" class="pill">Checking backend...</span>
+          </div>
+          <p class="muted">
+            Ask for a simpler explanation, a technical deep dive, or let the tutor review your current quiz answer.
+          </p>
+          <div class="quiz-actions" style="margin-top: 12px;">
+            <button id="explainLessonBtn" class="btn btn-soft">Explain this lesson</button>
+            <button id="reviewQuizBtn" class="btn btn-ghost">Review my quiz answer</button>
+          </div>
+          <label style="display:block; margin-top: 12px;">
+            <span class="muted">Your question</span>
+            <textarea id="tutorInput" rows="4" style="width:100%; margin-top:6px; border:1px solid #d9e3ef; border-radius:10px; padding:10px; font:inherit; resize:vertical;" placeholder="Example: Explain logistic regression like I am 12, then connect it to probabilities."></textarea>
+          </label>
+          <div class="quiz-actions">
+            <button id="sendTutorBtn" class="btn btn-primary">Ask tutor</button>
+          </div>
+          <div id="tutorResponse" class="tutor-content formula-item" style="margin-top: 12px;">
+            The tutor response will appear here.
+          </div>
+          <ul id="tutorSources" style="margin-top: 10px; padding-left: 18px;"></ul>
+        </section>
+
+        <section class="sources-box sub-card">
+          <h3>Reference sources</h3>
+          <ul id="sourceList"></ul>
+        </section>
+      </section>
+    </main>
+
+    <footer class="shell footer">
+      <p>Foundations first. Systems second. Reliable understanding always.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
