@@ -4,6 +4,34 @@ StudyBuddyAI is a fundamentals-first AI education platform designed to make mach
 
 The goal is simple: help learners move from memorizing jargon to actually building intuition.
 
+## Screenshots
+
+### Home Page
+
+![StudyBuddyAI home page](assets/screenshots/1.png)
+
+### Learning Snapshots
+
+<table>
+  <tr>
+    <td><img src="assets/screenshots/2.png" alt="Learning snapshot 1" width="100%"></td>
+    <td><img src="assets/screenshots/3.png" alt="Learning snapshot 2" width="100%"></td>
+  </tr>
+</table>
+
+### Concept Quiz
+
+![StudyBuddyAI concept quiz](assets/screenshots/4.png)
+
+### AI Tutor In Action
+
+<table>
+  <tr>
+    <td><img src="assets/screenshots/5.png" alt="AI tutor screenshot 1" width="100%"></td>
+    <td><img src="assets/screenshots/6.png" alt="AI tutor screenshot 2" width="100%"></td>
+  </tr>
+</table>
+
 ## Why This Project Exists
 
 A lot of AI learning today starts too far up the stack. People hear terms like transformers, RAG, agents, fine-tuning, and embeddings before they have a strong grasp of regression, classification, model evaluation, generalization, or probability.
