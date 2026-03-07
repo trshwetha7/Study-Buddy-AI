@@ -121,15 +121,23 @@ At a high level, this layer is used to:
 
 This makes the platform more than a content website. It becomes a guided learning system with an interactive educational assistant.
 
-## LangSmith Evidence Pack
+## Evaluation and Reliability Workflow
 
-To support interview review for LangChain-facing roles, the project includes a local LangSmith workflow that demonstrates:
+StudyBuddyAI includes a LangSmith-oriented workflow to make the tutor measurable and reliable, not just interactive.
 
-- tracing of tutor and answer-review runs
-- failure inspection with recent backend failure logs
-- prompt/chain comparison (`baseline` vs `improved` variants)
-- a small evaluation set with multiple examples
-- concrete improvement notes generated from eval deltas
+It covers:
+
+- traceable tutor and answer-review runs
+- failure inspection with backend failure logs
+- prompt/chain variant comparison (`baseline` vs `improved`)
+- repeatable local eval cases for regression testing
+- concrete changes tied to measured outcomes
+
+### Failure Mode -> Change -> Result
+
+- Failure mode: the first improved prompt was more concise, but it dropped technical coverage.
+- Change made: increased retrieval depth and enforced an explicit "Core terms" list in the improved variant.
+- Result: improved variant outperformed baseline across quality metrics on the same eval set.
 
 Latest local evaluation snapshot (6 cases):
 
@@ -138,7 +146,7 @@ Latest local evaluation snapshot (6 cases):
 | `baseline` | 0.8654 | 0.8333 | 0.9615 | 0.0000 |
 | `improved` | **0.9500** | **0.9333** | **1.0000** | 0.0000 |
 
-This shows a concrete post-eval improvement in both coverage and overall quality while maintaining clean, concise responses.
+This workflow helps build educational agents that are easier to trust in production because behavior is traceable, comparable, and iteratively improvable.
 
 Local test guide:
 - `LANGSMITH_LOCAL_TEST.md`
