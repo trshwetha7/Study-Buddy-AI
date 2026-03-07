@@ -147,6 +147,12 @@ p {
   gap: 12px;
 }
 
+.progress-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .metric {
   padding: 14px;
 }

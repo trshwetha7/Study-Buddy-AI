@@ -2122,7 +2122,7 @@ const LESSONS = [
   }
 ];
 
-const storageKey = "aitutoratlas_progress_v3";
+const storageKey = "studybuddyai_progress_v1";
 const today = new Date().toISOString().slice(0, 10);
 
 const state = {
@@ -2201,7 +2201,8 @@ const nodes = {
   checkAnswerBtn: document.getElementById("checkAnswerBtn"),
   nextQuestionBtn: document.getElementById("nextQuestionBtn"),
   newQuizPackBtn: document.getElementById("newQuizPackBtn"),
-  markCompleteBtn: document.getElementById("markCompleteBtn")
+  markCompleteBtn: document.getElementById("markCompleteBtn"),
+  resetProgressBtn: document.getElementById("resetProgressBtn")
 };
 
 function typesetMath(elements) {
@@ -2237,6 +2238,29 @@ function loadProgress() {
 function saveProgress() {
   state.progress.lastDate = today;
   localStorage.setItem(storageKey, JSON.stringify(state.progress));
+}
+
+function resetProgress() {
+  const confirmed = window.confirm(
+    "This will clear all local lesson progress, quiz accuracy, streak, and points for this browser. Continue?"
+  );
+  if (!confirmed) {
+    return;
+  }
+  localStorage.removeItem(storageKey);
+  state.progress = {
+    completed: [],
+    attempts: 0,
+    correct: 0,
+    points: 0,
+    streak: 0,
+    lastDate: ""
+  };
+  updateMetrics();
+  renderLessonList();
+  renderHeader(getLessonById(state.lessonId));
+  nodes.quizFeedback.textContent = "Progress reset complete.";
+  nodes.quizFeedback.className = "quiz-feedback";
 }
 
 function getTracks() {
@@ -2982,6 +3006,7 @@ function wireEvents() {
     renderQuestion();
   });
   nodes.markCompleteBtn.addEventListener("click", markComplete);
+  nodes.resetProgressBtn.addEventListener("click", resetProgress);
 }
 
 function renderAll() {

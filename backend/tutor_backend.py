@@ -1,10 +1,11 @@
-"""Backend tutor engine with optional LangChain + OpenAI RAG and local fallback."""
+"""Backend tutor engine with LangChain + OpenAI RAG and LangSmith-ready tracing hooks."""
 
 from __future__ import annotations
 
 import json
 import os
 import re
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -20,8 +21,34 @@ try:
 except Exception:
     HAS_LANGCHAIN = False
 
+try:
+    from langsmith import traceable
+except Exception:  # pragma: no cover - fallback when LangSmith is unavailable.
+    def traceable(*decorator_args, **decorator_kwargs):
+        if decorator_args and callable(decorator_args[0]) and len(decorator_args) == 1 and not decorator_kwargs:
+            return decorator_args[0]
+
+        def _passthrough(func):
+            return func
+
+        return _passthrough
+
 
 WORD_RE = re.compile(r"[a-zA-Z0-9_+-]+")
+
+DEFAULT_VARIANT = "improved"
+VARIANT_CONFIGS: Dict[str, Dict[str, Any]] = {
+    "baseline": {
+        "retrieval_k": 4,
+        "prompt_style": "baseline",
+        "description": "Minimal tutoring prompt used as baseline.",
+    },
+    "improved": {
+        "retrieval_k": 6,
+        "prompt_style": "improved",
+        "description": "Structured prompt optimized for concise, student-friendly explanations with stronger technical term coverage.",
+    },
+}
 
 
 @dataclass
@@ -40,6 +67,7 @@ class TutorEngine:
         self.docs = LESSON_KNOWLEDGE
         self.vector_store = None
         self.llm = None
+        self.failure_log: List[Dict[str, Any]] = []
         self._init_langchain()
 
     def _init_langchain(self) -> None:
@@ -86,6 +114,41 @@ class TutorEngine:
             self.vector_store = None
             self.llm = None
 
+    def _normalize_variant(self, variant: Optional[str]) -> str:
+        if not variant:
+            return DEFAULT_VARIANT
+        key = variant.strip().lower()
+        if key in VARIANT_CONFIGS:
+            return key
+        return DEFAULT_VARIANT
+
+    def available_variants(self) -> Dict[str, Dict[str, Any]]:
+        return VARIANT_CONFIGS
+
+    def _record_failure(
+        self,
+        stage: str,
+        error: Exception | str,
+        variant: str = DEFAULT_VARIANT,
+        question: str = "",
+        extra: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        entry = {
+            "time_utc": datetime.now(timezone.utc).isoformat(),
+            "stage": stage,
+            "variant": variant,
+            "question_preview": (question or "").strip()[:160],
+            "error": str(error),
+        }
+        if extra:
+            entry["extra"] = extra
+        self.failure_log.append(entry)
+        self.failure_log = self.failure_log[-50:]
+
+    def get_failures(self, limit: int = 20) -> List[Dict[str, Any]]:
+        safe_limit = max(1, min(limit, 50))
+        return list(reversed(self.failure_log[-safe_limit:]))
+
     def status(self) -> Dict[str, Any]:
         return {
             "mode": self.mode,
@@ -95,6 +158,9 @@ class TutorEngine:
             "openai_embed_model": os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small"),
             "openai_api_configured": bool(os.getenv("OPENAI_API_KEY")),
             "langsmith_tracing": os.getenv("LANGSMITH_TRACING", "false"),
+            "variants": self.available_variants(),
+            "default_variant": DEFAULT_VARIANT,
+            "failure_count": len(self.failure_log),
             "message": self.last_error or "AI tutor backend ready.",
         }
 
@@ -204,6 +270,12 @@ class TutorEngine:
             return results
         except Exception as exc:
             self.last_error = f"Vector retrieval failed: {exc}"
+            self._record_failure(
+                stage="retrieve",
+                error=exc,
+                question=query,
+                extra={"lesson_id": lesson_id, "k": k},
+            )
             return self._lexical_retrieve(query, lesson_id, k=k)
 
     def _local_tutor_response(self, question: str, lesson_id: Optional[str], learner_answer: Optional[str] = None) -> Dict[str, Any]:
@@ -254,26 +326,89 @@ class TutorEngine:
             return "Partly correct. You captured some of the idea, but the explanation is missing important details from the lesson context."
         return "Likely incorrect or too vague. The answer does not overlap much with the retrieved lesson context."
 
-    def _invoke_llm(self, system_prompt: str, user_prompt: str) -> str:
+    def _extract_keyword_candidates(self, chunks: List[RetrievedChunk], limit: int = 12) -> List[str]:
+        out: List[str] = []
+        seen = set()
+        for chunk in chunks:
+            for line in chunk.text.splitlines():
+                if not line.lower().startswith("keywords:"):
+                    continue
+                for raw in line.split(":", 1)[1].split(","):
+                    token = raw.strip()
+                    if not token:
+                        continue
+                    key = token.lower()
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    out.append(token)
+                    if len(out) >= limit:
+                        return out
+        return out
+
+    def _build_system_prompt(self, prompt_style: str) -> str:
+        if prompt_style == "baseline":
+            return (
+                "You are StudyBuddyAI, an AI tutor. "
+                "Answer the learner's question using the retrieved context. "
+                "Be accurate and clear."
+            )
+        return (
+            "You are StudyBuddyAI, a patient AI educator. "
+            "Answer the learner's latest question directly instead of forcing a fixed lesson template. "
+            "Use warm, human teaching language. Keep the answer focused on what was actually asked. "
+            "Keep the answer compact by default: roughly 160 to 280 words unless the learner explicitly asks for a deep dive. "
+            "If the learner asks for a simpler version, prioritize the simpler version first. "
+            "Use short markdown headings only when they help clarity. Do not use filler headings if one clear explanation is enough. "
+            "Use clean markdown only: short headings, normal paragraphs, and bullets when useful. Do not leave stray asterisks in the text. "
+            "Avoid robotic phrasing, avoid repeating the entire lesson, and do not restate unrelated sections. "
+            "For interview-readiness, include a short 'Core terms' bullet list with 5 to 7 exact technical terms from the provided keyword candidates whenever relevant. "
+            "For comparison questions, explicitly name both sides (for example one-vs-rest and one-vs-one). "
+            "When math notation helps, write it in inline LaTeX such as $x^2$, $\\theta$, or $P(D\\mid\\theta)$ so symbols render correctly. "
+            "Stay grounded in the retrieved lesson context."
+        )
+
+    @traceable(name="studybuddy_invoke_llm", run_type="llm")
+    def _invoke_llm(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        run_name: str,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
         if self.mode != "langchain-rag" or self.llm is None:
             raise RuntimeError("LLM is not available in current mode.")
+        config = {
+            "run_name": run_name,
+            "tags": tags or [],
+            "metadata": metadata or {},
+        }
         response = self.llm.invoke([
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_prompt),
-        ])
+        ], config=config)
         return response.content if isinstance(response.content, str) else json.dumps(response.content)
 
+    @traceable(name="studybuddy_tutor_chain", run_type="chain")
     def tutor(
         self,
         question: str,
         lesson_id: Optional[str] = None,
         learner_level: str = "beginner",
         history: Optional[List[Dict[str, str]]] = None,
+        variant: Optional[str] = None,
     ) -> Dict[str, Any]:
         if self.mode != "langchain-rag":
             return self._langchain_unavailable_response()
 
-        chunks = self.retrieve(question, lesson_id, k=4)
+        selected_variant = self._normalize_variant(variant)
+        variant_config = VARIANT_CONFIGS[selected_variant]
+        retrieval_k = variant_config["retrieval_k"]
+        prompt_style = variant_config["prompt_style"]
+
+        chunks = self.retrieve(question, lesson_id, k=retrieval_k)
         context = "\n\n".join(chunk.text for chunk in chunks)
         cleaned_history = []
         for item in history or []:
@@ -285,33 +420,55 @@ class TutorEngine:
         history_block = "\n".join(
             f"{entry['role'].upper()}: {entry['content']}" for entry in cleaned_history
         )
-        system_prompt = (
-            "You are StudyBuddyAI, a patient AI educator. "
-            "Answer the learner's latest question directly instead of forcing a fixed lesson template. "
-            "Use warm, human teaching language. Keep the answer focused on what was actually asked. "
-            "Keep the answer compact by default: roughly 120 to 220 words unless the learner explicitly asks for a deep dive. "
-            "If the learner asks for a simpler version, prioritize the simpler version first. "
-            "Use short markdown headings only when they help clarity. Do not use filler headings if one clear explanation is enough. "
-            "Use clean markdown only: short headings, normal paragraphs, and bullets when useful. Do not leave stray asterisks in the text. "
-            "Avoid robotic phrasing, avoid repeating the entire lesson, and do not restate unrelated sections. "
-            "When math notation helps, write it in inline LaTeX such as $x^2$, $\\theta$, or $P(D\\mid\\theta)$ so symbols render correctly. "
-            "Stay grounded in the retrieved lesson context."
-        )
+        system_prompt = self._build_system_prompt(prompt_style)
+        keyword_candidates = self._extract_keyword_candidates(chunks, limit=12)
+        keyword_block = ""
+        if prompt_style == "improved" and keyword_candidates:
+            keyword_block = (
+                "Keyword candidates (use relevant terms verbatim when accurate): "
+                + ", ".join(keyword_candidates)
+                + "\n\n"
+            )
         user_prompt = (
             f"Learner level: {learner_level}\n"
             f"Recent conversation:\n{history_block or 'No prior conversation.'}\n\n"
+            f"{keyword_block}"
             f"Latest learner question: {question}\n\n"
             f"Retrieved lesson context:\n{context}"
         )
         try:
-            answer = self._invoke_llm(system_prompt, user_prompt)
+            answer = self._invoke_llm(
+                system_prompt,
+                user_prompt,
+                run_name=f"studybuddy_tutor_{selected_variant}",
+                tags=[
+                    "studybuddy",
+                    "tutor",
+                    f"variant:{selected_variant}",
+                    f"lesson:{lesson_id or 'none'}",
+                ],
+                metadata={
+                    "variant": selected_variant,
+                    "learner_level": learner_level,
+                    "lesson_id": lesson_id or "",
+                    "retrieval_k": retrieval_k,
+                },
+            )
             return {
                 "answer": answer,
                 "sources": self._serialize_sources(chunks),
                 "mode": self.mode,
+                "variant": selected_variant,
             }
         except Exception as exc:
             self.last_error = f"Tutor generation failed: {exc}"
+            self._record_failure(
+                stage="tutor",
+                error=exc,
+                variant=selected_variant,
+                question=question,
+                extra={"lesson_id": lesson_id, "learner_level": learner_level},
+            )
             return {
                 "answer": (
                     "### Tutor request failed\n\n"
@@ -320,19 +477,25 @@ class TutorEngine:
                 ),
                 "sources": self._serialize_sources(chunks),
                 "mode": self.mode,
+                "variant": selected_variant,
             }
 
+    @traceable(name="studybuddy_review_chain", run_type="chain")
     def review_answer(
         self,
         question: str,
         learner_answer: str,
         reference_answer: str,
         lesson_id: Optional[str] = None,
+        variant: Optional[str] = None,
     ) -> Dict[str, Any]:
         if self.mode != "langchain-rag":
             return self._langchain_unavailable_response()
 
-        chunks = self.retrieve(f"{question} {reference_answer}", lesson_id, k=4)
+        selected_variant = self._normalize_variant(variant)
+        variant_config = VARIANT_CONFIGS[selected_variant]
+        retrieval_k = variant_config["retrieval_k"]
+        chunks = self.retrieve(f"{question} {reference_answer}", lesson_id, k=retrieval_k)
         context = "\n\n".join(chunk.text for chunk in chunks)
         system_prompt = (
             "You are an AI tutor reviewing a learner's answer. "
@@ -347,14 +510,37 @@ class TutorEngine:
             f"Retrieved lesson context:\n{context}"
         )
         try:
-            answer = self._invoke_llm(system_prompt, user_prompt)
+            answer = self._invoke_llm(
+                system_prompt,
+                user_prompt,
+                run_name=f"studybuddy_review_{selected_variant}",
+                tags=[
+                    "studybuddy",
+                    "review",
+                    f"variant:{selected_variant}",
+                    f"lesson:{lesson_id or 'none'}",
+                ],
+                metadata={
+                    "variant": selected_variant,
+                    "lesson_id": lesson_id or "",
+                    "retrieval_k": retrieval_k,
+                },
+            )
             return {
                 "answer": answer,
                 "sources": self._serialize_sources(chunks),
                 "mode": self.mode,
+                "variant": selected_variant,
             }
         except Exception as exc:
             self.last_error = f"Answer review failed: {exc}"
+            self._record_failure(
+                stage="review_answer",
+                error=exc,
+                variant=selected_variant,
+                question=question,
+                extra={"lesson_id": lesson_id},
+            )
             return {
                 "answer": (
                     "### Review request failed\n\n"
@@ -363,6 +549,7 @@ class TutorEngine:
                 ),
                 "sources": self._serialize_sources(chunks),
                 "mode": self.mode,
+                "variant": selected_variant,
             }
 
 

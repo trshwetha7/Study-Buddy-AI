@@ -121,6 +121,28 @@ At a high level, this layer is used to:
 
 This makes the platform more than a content website. It becomes a guided learning system with an interactive educational assistant.
 
+## LangSmith Evidence Pack
+
+To support interview review for LangChain-facing roles, the project includes a local LangSmith workflow that demonstrates:
+
+- tracing of tutor and answer-review runs
+- failure inspection with recent backend failure logs
+- prompt/chain comparison (`baseline` vs `improved` variants)
+- a small evaluation set with multiple examples
+- concrete improvement notes generated from eval deltas
+
+Latest local evaluation snapshot (6 cases):
+
+| Variant | Avg Final Score | Avg Keyword Recall | Avg Concise Score | Failure Rate |
+|---|---:|---:|---:|---:|
+| `baseline` | 0.8654 | 0.8333 | 0.9615 | 0.0000 |
+| `improved` | **0.9500** | **0.9333** | **1.0000** | 0.0000 |
+
+This shows a concrete post-eval improvement in both coverage and overall quality while maintaining clean, concise responses.
+
+Local test guide:
+- `LANGSMITH_LOCAL_TEST.md`
+
 ## Learning Experience
 
 Each lesson is structured to make the concept stick.
@@ -135,6 +157,8 @@ Learners move through:
 - a short thought prompt
 - a flashcard-style takeaway
 - a concept quiz pack
+
+The app also includes a **Hard reset progress** button to clear local browser-stored progress instantly during testing and demos.
 
 The design choice is intentional: the platform tries to teach the same idea in multiple representations so the learner can build intuition, not just recognition.
 

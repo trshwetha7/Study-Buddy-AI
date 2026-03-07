@@ -1,0 +1,38 @@
+[
+  {
+    "id": "eval-01",
+    "lesson_id": "01-mle-map",
+    "question": "Explain MLE vs MAP like I am a beginner, then connect to regularization.",
+    "expected_keywords": ["mle", "map", "prior", "posterior", "regularization"]
+  },
+  {
+    "id": "eval-02",
+    "lesson_id": "07-logistic",
+    "question": "Why do we use sigmoid in logistic regression?",
+    "expected_keywords": ["sigmoid", "probability", "classification", "linear score"]
+  },
+  {
+    "id": "eval-03",
+    "lesson_id": "10-svm",
+    "question": "What is one-vs-rest and one-vs-one in SVM?",
+    "expected_keywords": ["one-vs-rest", "one-vs-one", "multiclass", "svm"]
+  },
+  {
+    "id": "eval-04",
+    "lesson_id": "19-prompt",
+    "question": "Give me a strong prompt engineering example for summarizing docs.",
+    "expected_keywords": ["role", "task", "constraints", "format", "prompt"]
+  },
+  {
+    "id": "eval-05",
+    "lesson_id": "21-rag",
+    "question": "How is RAG different from just prompting an LLM?",
+    "expected_keywords": ["retrieval", "grounded", "documents", "hallucination", "context"]
+  },
+  {
+    "id": "eval-06",
+    "lesson_id": "23-monitoring",
+    "question": "What should teams monitor after deploying an ML model?",
+    "expected_keywords": ["drift", "latency", "precision", "recall", "monitoring"]
+  }
+]

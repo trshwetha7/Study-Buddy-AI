@@ -8,7 +8,7 @@ import os
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
 
@@ -27,7 +27,7 @@ def load_env_file() -> None:
 
 load_env_file()
 
-from backend.tutor_backend import ENGINE
+from backend.tutor_backend import DEFAULT_VARIANT, ENGINE
 
 
 class AppHandler(SimpleHTTPRequestHandler):
@@ -51,6 +51,28 @@ class AppHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path == "/api/health":
             self._send_json(ENGINE.status())
+            return
+        if parsed.path == "/api/langsmith/failures":
+            query = parse_qs(parsed.query)
+            try:
+                limit = int((query.get("limit") or ["20"])[0])
+            except ValueError:
+                limit = 20
+            self._send_json(
+                {
+                    "failures": ENGINE.get_failures(limit=limit),
+                    "count": len(ENGINE.failure_log),
+                    "mode": ENGINE.mode,
+                }
+            )
+            return
+        if parsed.path == "/api/langsmith/variants":
+            self._send_json(
+                {
+                    "variants": ENGINE.available_variants(),
+                    "default_variant": DEFAULT_VARIANT,
+                }
+            )
             return
         if parsed.path == "/" and not (ROOT / "index.html").exists():
             self._send_json({"error": "Frontend not found."}, status=HTTPStatus.NOT_FOUND)
@@ -77,6 +99,7 @@ class AppHandler(SimpleHTTPRequestHandler):
                 lesson_id=payload.get("lessonId"),
                 learner_level=payload.get("learnerLevel") or "beginner",
                 history=payload.get("history") or [],
+                variant=payload.get("variant"),
             )
             self._send_json(response)
             return
@@ -96,6 +119,7 @@ class AppHandler(SimpleHTTPRequestHandler):
                 learner_answer=learner_answer,
                 reference_answer=reference_answer,
                 lesson_id=payload.get("lessonId"),
+                variant=payload.get("variant"),
             )
             self._send_json(response)
             return
