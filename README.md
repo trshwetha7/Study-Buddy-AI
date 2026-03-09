@@ -2,8 +2,9 @@
 
 StudyBuddyAI is a fundamentals-first AI education platform designed to make machine learning and modern AI easier to understand without diluting the technical meaning.
 
-The goal is simple: help learners move from memorizing jargon to actually building intuition!
-This is still a work in progress and my passion to create solutions that can actually help others will help me drive this thing :)
+The goal is simple: help learners move from memorizing jargon to actually building intuition.
+
+The platform combines structured AI education with a lesson-grounded LangChain tutor and a LangSmith-based evaluation workflow for improving reliability.
 
 ## Screenshots
 
@@ -123,7 +124,7 @@ This makes the platform more than a content website. It becomes a guided learnin
 
 ## Evaluation and Reliability Workflow
 
-StudyBuddyAI includes a LangSmith-oriented workflow to make the tutor measurable and reliable, not just interactive.
+StudyBuddyAI includes a LangSmith-based evaluation workflow to trace tutor behavior, inspect failure cases, compare prompt variants, and improve response reliability over time.
 
 It covers:
 
@@ -133,7 +134,7 @@ It covers:
 - repeatable local eval cases for regression testing
 - concrete changes tied to measured outcomes
 
-### Failure Mode -> Change -> Result
+### Example Iteration Cycle
 
 - Failure mode: the first improved prompt was more concise, but it dropped technical coverage.
 - Change made: increased retrieval depth and enforced an explicit "Core terms" list in the improved variant.
@@ -141,15 +142,18 @@ It covers:
 
 Latest local evaluation snapshot (6 cases):
 
-| Variant | Avg Final Score | Avg Keyword Recall | Avg Concise Score | Failure Rate |
-|---|---:|---:|---:|---:|
-| `baseline` | 0.8654 | 0.8333 | 0.9615 | 0.0000 |
-| `improved` | **0.9500** | **0.9333** | **1.0000** | 0.0000 |
+| Variant   | Avg Final Score | Avg Keyword Recall | Avg Concise Score | Failure Rate |
+|-----------|------------------|--------------------|-------------------|--------------|
+| baseline  | 0.8654           | 0.8333             | 0.9615            | 0.0000       |
+| improved  | 0.9500           | 0.9333             | 1.0000            | 0.0000       |
 
-This workflow helps build educational agents that are easier to trust in production because behavior is traceable, comparable, and iteratively improvable.
+In practice, this iteration improved grounding, preserved technical coverage, and produced more dependable explanations for learner questions.
 
-Local test guide:
-- `LANGSMITH_LOCAL_TEST.md`
+### Evaluation Snapshot
+
+![LangSmith evaluation or local eval screenshot](assets/screenshots/langsmith_eval.png)
+
+Reproducibility: the local evaluation and tracing workflow is documented in `LANGSMITH_LOCAL_TEST.md`.
 
 ## Learning Experience
 
